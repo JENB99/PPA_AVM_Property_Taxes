@@ -1,21 +1,15 @@
 ---
-title: "MUSA 5080 Portfolio"
+title: "Automated Valuation Mode for Property Tax Assessments"
 ---
 
-# Welcome to My Portfolio
+# Our team is working for a project for the Philadelphia Office of Property Assessment, in which the city wants to improve its Automated Valuation Model (AVM) for property tax assessments. 
 
-This portfolio documents my learning journey in Public Policy Analytics (MUSA 5080).
 
-## About This Course
-Advanced spatial analysis and data science for urban planning and public policy.
 
-## Portfolio Structure
-- **Weekly Notes:** My learning reflections and key concepts
-- **Labs:** Completed assignments and analyses
-- **Final Project:** Capstone modeling challenge
+## About The Project
 
-## About Me
-[Students will customize this section]
+[details]
+
 
 ## Contact
 - Email: [your.email@upenn.edu]
