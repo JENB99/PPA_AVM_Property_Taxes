@@ -2,13 +2,10 @@
 title: "Automated Valuation Mode for Property Tax Assessments"
 ---
 
-# Our team is working for a project for the Philadelphia Office of Property Assessment, in which the city wants to improve its Automated Valuation Model (AVM) for property tax assessments. 
-
-
 
 ## About The Project
+Our team is working to create a an Automated Valuation Model to predict sales prices for the Philadelphia Office of Property Assessment. 
 
-[details]
 
 
 ## Contact
