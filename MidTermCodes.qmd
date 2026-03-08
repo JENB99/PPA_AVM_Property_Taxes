@@ -1,0 +1,66 @@
+---
+title: "ExploratoryDataAnalysis"
+editor: visual
+---
+
+```{r}
+
+install.packages("tidycensus")
+library(tidycensus)
+library(tidyverse)
+library(dplyr)
+library(sf)
+census <- read.csv("~/Desktop/PPA_AVM_Property_Taxes/data/census_dataset_cleaned.csv")
+house <- read.csv("~/Desktop/PPA_AVM_Property_Taxes/data/houses_clean.csv")
+
+
+
+
+# Step 1: Pull census block group BOUNDARIES for Philadelphia from tidycensus
+census_geo <- get_acs(
+  geography = "block group",
+  variables = "B19013_001",   # placeholder — you already have your vars
+  state = "PA",
+  county = "Philadelphia",
+  geometry = TRUE             # ← this gives you the polygon shapes
+)
+
+
+
+#changed GEOID to character
+census_geo <- census_geo %>%
+  mutate(GEOID = as.character(GEOID))
+
+
+
+# Step 2: Join your cleaned census attributes onto those boundaries by GEOID
+census_full <- census_geo %>%
+  left_join(census, by = "GEOID")
+
+
+
+# Step 3: Reproject both to EPSG:3365
+census_full <- st_transform(census_full, 3365)
+houses_sf   <- st_as_sf(house, wkt = "shape", crs = 2272) %>% 
+                st_transform(3365)
+
+
+# Step 4: Spatial join — each house gets the census attributes of the
+#         block group polygon it falls inside
+houses_joined <- st_join(houses_sf, census_full, join = st_within)
+
+
+
+houses_joined <- houses_joined %>%
+  drop_na(MEDHHINCE, Pov_Prop, BACH_PROP, Vacancy_Rate, WHITE_PROP)
+
+
+st_write(houses_joined, "~/Desktop/PPA_AVM_Property_Taxes/data/census_housing_geo.shp")
+
+
+
+```
+
+\
+\
+\
