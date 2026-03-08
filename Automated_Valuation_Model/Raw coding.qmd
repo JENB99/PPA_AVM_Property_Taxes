@@ -2,3 +2,127 @@
 title: "Automated Valuation Model"
 editor: visual
 ---
+
+```{r}
+#installing all possible packages
+install.packages(c(
+  "tidyverse",
+  "tidycensus",
+  "scales",
+  "RColorBrewer",
+  "sf",
+  "tigris",
+  "patchwork",
+  "knitr",
+  "ggplot2"
+))
+
+#loading all packages
+library(tidyverse)
+library(tidycensus)
+library(scales)
+library(RColorBrewer)
+library(sf)
+library(tidyverse)
+library(tigris)
+library(tidycensus)
+library(scales)
+library(patchwork)
+library(knitr)
+library(ggplot2)
+
+#loading data: median hh income, those with bachelors degree attainment, and white population presence
+pa_county_data <- get_acs(
+  geography = "block group",
+  state = "PA",
+  county = "Philadelphia",
+  variables = c( 
+    MEDHHINC = "B19013_001",
+    BACHDEG = "B15003_022",
+    WHITE = "B03002_003",
+    Tpop = "B01003_001",
+    Pov = "B17021_002",
+    Vacant = "B25004_001",
+    Total_Housing = "B25001_001"
+  ),
+  year = 2024,
+  survey = "acs5",
+  output = "wide"
+)
+
+
+
+#calculating margin of error for each 
+pa_county_data <- pa_county_data %>%
+  mutate(
+    MEDHHINC_MOE = (MEDHHINCM / MEDHHINCE) * 100,
+    BACHDEG_MOE  = (BACHDEGM / BACHDEGE) * 100,
+    WHITE_MOE    = (WHITEM / WHITEE) * 100,
+    Tpop_MOE     = (TpopM / TpopE) * 100,
+    Pov_MOE = (PovM/PovE)*100,
+    Vacant_MOE = (VacantM/VacantE)*100,
+    Total_HousingMOE = (Total_HousingM/Total_HousingE)*100
+  )
+
+
+
+
+#categorizing for future filteration 
+filter_pa_category <- pa_county_data %>%
+  mutate(
+    reliability = case_when(
+      is.na(MEDHHINC_MOE) | is.infinite(MEDHHINC_MOE) |
+      is.na(BACHDEG_MOE)  | is.infinite(BACHDEG_MOE)  |
+      is.na(WHITE_MOE)    | is.infinite(WHITE_MOE)     |
+      is.na(Tpop_MOE)     | is.infinite(Tpop_MOE)      |
+      is.na(Pov_MOE)      | is.infinite(Pov_MOE)       |
+      is.na(Vacant_MOE)   | is.infinite(Vacant_MOE)    |
+      is.na(Total_HousingMOE) | is.infinite(Total_HousingMOE) ~ "Unreliable",
+      MEDHHINC_MOE > 40 | BACHDEG_MOE > 40 | WHITE_MOE > 40 |
+      Tpop_MOE > 40 | Pov_MOE > 40 | Vacant_MOE > 40 | 
+      Total_HousingMOE > 40 ~ "Use with Caution",
+      TRUE ~ "Reliable"
+    )
+  ) %>%
+  drop_na()
+
+
+
+head(good_data)
+
+final_dataset <- filter_pa_category %>%
+  mutate(
+    BACH_PROP = (BACHDEGE/ TpopE) * 100,
+    WHITE_PROP = (WHITEE/TpopE) *100,
+    Pov_Prop = (PovE/TpopE) *100,
+    Vacancy_Rate = (VacantE/Total_HousingE)*100
+  )%>%
+  select(GEOID,
+         NAME,
+         BACH_PROP, 
+         WHITE_PROP,
+         Pov_Prop,
+         Vacancy_Rate,
+         MEDHHINCE
+  )
+
+final_dataset
+
+
+
+
+
+```
+
+\
+
+\
+
+\
+\
+
+\
+\
+
+\
+\
