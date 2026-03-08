@@ -3,6 +3,7 @@ title: "Automated Valuation Model"
 editor: visual
 ---
 
+<<<<<<< HEAD
 ```{r} 
 library(sf)
 library(tidyverse)
@@ -19,10 +20,73 @@ COMMERICAL_COR <- st_read("data/CommercialCord.shp")
 redlining <- st_read("data/Redlining.shp")
 NBHD <- st_read("data/NBHDS.shp")
 PHL_LIMITS <-  st_read("data/City_Limits.shp")
+=======
+```{r}
+#installing all possible packages
+install.packages(c(
+  "tidyverse",
+  "tidycensus",
+  "scales",
+  "RColorBrewer",
+  "sf",
+  "tigris",
+  "patchwork",
+  "knitr",
+  "ggplot2"
+))
+
+#loading all packages
+library(tidyverse)
+library(tidycensus)
+library(scales)
+library(RColorBrewer)
+library(sf)
+library(tidyverse)
+library(tigris)
+library(tidycensus)
+library(scales)
+library(patchwork)
+library(knitr)
+library(ggplot2)
+
+#loading data: median hh income, those with bachelors degree attainment, and white population presence
+pa_county_data <- get_acs(
+  geography = "block group",
+  state = "PA",
+  county = "Philadelphia",
+  variables = c( 
+    MEDHHINC = "B19013_001",
+    BACHDEG = "B15003_022",
+    WHITE = "B03002_003",
+    Tpop = "B01003_001",
+    Pov = "B17021_002",
+    Vacant = "B25004_001",
+    Total_Housing = "B25001_001"
+  ),
+  year = 2024,
+  survey = "acs5",
+  output = "wide"
+)
+
+
+
+#calculating margin of error for each 
+pa_county_data <- pa_county_data %>%
+  mutate(
+    MEDHHINC_MOE = (MEDHHINCM / MEDHHINCE) * 100,
+    BACHDEG_MOE  = (BACHDEGM / BACHDEGE) * 100,
+    WHITE_MOE    = (WHITEM / WHITEE) * 100,
+    Tpop_MOE     = (TpopM / TpopE) * 100,
+    Pov_MOE = (PovM/PovE)*100,
+    Vacant_MOE = (VacantM/VacantE)*100,
+    Total_HousingMOE = (Total_HousingM/Total_HousingE)*100
+  )
+>>>>>>> b2c34a70b032cbc88f98dbce8a89adbdc5700002
 
 
 
 
+<<<<<<< HEAD
 ```
 
 
@@ -34,17 +98,30 @@ colnames(NBHD)
 colnames(redlining)
 colnames(COMMERICAL_COR)
 
-#KEEP SELECTED COLUMNS
-NBHD <- NBHD %>%
-  select(LISTNAME, geometry)
 
+NBHD <- NBHD %>%
+  select(LISTNAME, geometry) %>%
+  rename(Name = LISTNAME) 
+
+# Redlining
 redlining <- redlining %>%
   filter(METRO_NAME == "Philadelphia-Camden-Wilmington") %>%
-  select(GEOID20,INTPTLAT20, INTPTLON20,EQINTER20, METRO_NAME, geometry)  # 1A/2B/3C/4D  grade
+  select(GEOID20, INTPTLAT20, INTPTLON20, EQINTER20, METRO_NAME, geometry) %>%
+  rename(
+    Lon   = INTPTLON20,
+    Lat   = INTPTLAT20,
+    Metro = METRO_NAME,
+    Grade = EQINTER20  
+  )
 
+# COMMERICAL_COR 
 COMMERICAL_COR <- COMMERICAL_COR %>%
-  select(P_DIST, PT_ADD, ZIP, geometry)
-
+  select(P_DIST, PT_ADD, ZIP, geometry) %>%
+  rename(
+    District = P_DIST,
+    Address  = PT_ADD,
+    Zip      = ZIP
+  )
 
 
 
@@ -73,6 +150,48 @@ nrow(redlining_phl)  # should be smaller
 
 
 
+=======
+#categorizing for future filteration 
+filter_pa_category <- pa_county_data %>%
+  mutate(
+    reliability = case_when(
+      is.na(MEDHHINC_MOE) | is.infinite(MEDHHINC_MOE) |
+      is.na(BACHDEG_MOE)  | is.infinite(BACHDEG_MOE)  |
+      is.na(WHITE_MOE)    | is.infinite(WHITE_MOE)     |
+      is.na(Tpop_MOE)     | is.infinite(Tpop_MOE)      |
+      is.na(Pov_MOE)      | is.infinite(Pov_MOE)       |
+      is.na(Vacant_MOE)   | is.infinite(Vacant_MOE)    |
+      is.na(Total_HousingMOE) | is.infinite(Total_HousingMOE) ~ "Unreliable",
+      MEDHHINC_MOE > 40 | BACHDEG_MOE > 40 | WHITE_MOE > 40 |
+      Tpop_MOE > 40 | Pov_MOE > 40 | Vacant_MOE > 40 | 
+      Total_HousingMOE > 40 ~ "Use with Caution",
+      TRUE ~ "Reliable"
+    )
+  ) %>%
+  drop_na()
+
+
+
+head(good_data)
+
+final_dataset <- filter_pa_category %>%
+  mutate(
+    BACH_PROP = (BACHDEGE/ TpopE) * 100,
+    WHITE_PROP = (WHITEE/TpopE) *100,
+    Pov_Prop = (PovE/TpopE) *100,
+    Vacancy_Rate = (VacantE/Total_HousingE)*100
+  )%>%
+  select(GEOID,
+         NAME,
+         BACH_PROP, 
+         WHITE_PROP,
+         Pov_Prop,
+         Vacancy_Rate,
+         MEDHHINCE
+  )
+
+final_dataset
+>>>>>>> b2c34a70b032cbc88f98dbce8a89adbdc5700002
 
 
 
@@ -80,6 +199,7 @@ nrow(redlining_phl)  # should be smaller
 
 ```
 
+<<<<<<< HEAD
 
 
 ```{r} 
@@ -87,10 +207,21 @@ nrow(redlining_phl)  # should be smaller
 
 
 # Export cleaned shp
-st_write(redlining_phl,   "data/redlining_phl.shp",   delete_if_exists = TRUE)
-st_write(NBHD,            "data/NBHD_clean.shp",      delete_if_exists = TRUE)
-st_write(COMMERICAL_COR,  "data/CommCor_clean.shp",   delete_if_exists = TRUE)
-st_write(PHL_LIMITS,      "data/PHL_LIMITS_clean.shp",delete_if_exists = TRUE)
+
+
+# Rename to short names before writing
+redlining_phl <- redlining_phl %>%
+  rename(
+    lat  = Lat,
+    lon  = Lon,
+    metro = Metro,
+    grade = Grade
+  )
+
+st_write(redlining_phl, "data/redlining_phl.shp", append=FALSE)
+st_write(NBHD,           "data/NBHD_clean.shp",       append=FALSE)
+st_write(COMMERICAL_COR, "data/CommCor_clean.shp",    append=FALSE)
+st_write(PHL_LIMITS,     "data/PHL_LIMITS_clean.shp", append=FALSE)
 
 
 
@@ -153,3 +284,17 @@ st_write(PHL_LIMITS,      "data/PHL_LIMITS_clean.shp",delete_if_exists = TRUE)
 
 
 ```
+=======
+\
+
+\
+
+\
+\
+
+\
+\
+
+\
+\
+>>>>>>> b2c34a70b032cbc88f98dbce8a89adbdc5700002
