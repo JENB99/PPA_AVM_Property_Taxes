@@ -2,3 +2,154 @@
 title: "Automated Valuation Model"
 editor: visual
 ---
+
+```{r} 
+library(sf)
+library(tidyverse)
+library(tidycensus)
+library(tigris)
+library(scales)
+library(patchwork)
+library(RColorBrewer)
+library(here)
+
+#LOAD SPATIAL DATA
+
+COMMERICAL_COR <- st_read("data/CommercialCord.shp")
+redlining <- st_read("data/Redlining.shp")
+NBHD <- st_read("data/NBHDS.shp")
+PHL_LIMITS <-  st_read("data/City_Limits.shp")
+
+
+
+
+```
+
+
+
+```{r} 
+
+#COLUMNS
+colnames(NBHD)
+colnames(redlining)
+colnames(COMMERICAL_COR)
+
+#KEEP SELECTED COLUMNS
+NBHD <- NBHD %>%
+  select(LISTNAME, geometry)
+
+redlining <- redlining %>%
+  filter(METRO_NAME == "Philadelphia-Camden-Wilmington") %>%
+  select(GEOID20,INTPTLAT20, INTPTLON20,EQINTER20, METRO_NAME, geometry)  # 1A/2B/3C/4D  grade
+
+COMMERICAL_COR <- COMMERICAL_COR %>%
+  select(P_DIST, PT_ADD, ZIP, geometry)
+
+
+
+
+```
+
+
+
+```{r} 
+
+#Clipping each shp file to PHL  boundaries- ONLY FOR REDLINING
+ # Transform to the SAME CRS (4326 = standard lat/lon)
+
+PHL_LIMITS <- st_transform(PHL_LIMITS, crs = 4326)
+redlining   <- st_transform(redlining, crs = 4326)
+NBHD        <- st_transform(NBHD, crs = 4326)
+COMMERICAL_COR <- st_transform(COMMERICAL_COR, crs = 4326)
+
+# redlining to Philly boundary
+redlining_phl <- st_filter(redlining, PHL_LIMITS)
+
+#it worked?
+nrow(redlining)      # 13,488
+nrow(redlining_phl)  # should be smaller
+
+
+
+
+
+
+
+
+
+
+```
+
+
+
+```{r} 
+
+
+
+# Export cleaned shp
+st_write(redlining_phl,   "data/redlining_phl.shp",   delete_if_exists = TRUE)
+st_write(NBHD,            "data/NBHD_clean.shp",      delete_if_exists = TRUE)
+st_write(COMMERICAL_COR,  "data/CommCor_clean.shp",   delete_if_exists = TRUE)
+st_write(PHL_LIMITS,      "data/PHL_LIMITS_clean.shp",delete_if_exists = TRUE)
+
+
+
+
+
+
+
+```
+
+
+
+```{r} 
+
+
+
+
+
+
+
+
+
+```
+
+
+
+```{r} 
+
+
+
+
+
+
+
+
+
+```
+
+
+```{r} 
+
+
+
+
+
+
+
+
+
+```
+
+
+```{r} 
+
+
+
+
+
+
+
+
+
+```
