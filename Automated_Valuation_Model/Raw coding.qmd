@@ -140,7 +140,8 @@ NBHD        <- st_transform(NBHD, crs = 4326)
 COMMERICAL_COR <- st_transform(COMMERICAL_COR, crs = 4326)
 
 # redlining to Philly boundary
-redlining_phl <- st_filter(redlining, PHL_LIMITS)
+redlining_phl <- st_intersection(redlining_phl, PHL_LIMITS)
+
 
 #it worked?
 nrow(redlining)      # 13,488
